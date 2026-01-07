@@ -42,7 +42,22 @@
 
 #define RADIOLIB_LOW_LEVEL 1
 
-#include <RadioLib.h>
+// CHANGE: Using quotes instead of brackets to help the compiler find the file
+#include "RadioLib.h"
+
+/* --- ARDUINO IDE COMPATIBILITY START --- */
+#ifndef RF_CC1101
+#  define RF_CC1101 "CC1101"
+#endif
+#ifndef RF_MODULE_GDO0
+#  define RF_MODULE_GDO0 1
+#endif
+#ifndef RF_MODULE_GDO2
+#  define RF_MODULE_GDO2 2
+#endif
+// Link to the radio object in your sketch
+extern CC1101 radio;
+/* --- ARDUINO IDE COMPATIBILITY END --- */
 
 /*----------------------------- Optional Compiler Definitions -----------------------------*/
 
@@ -285,7 +300,7 @@ public:
   static void enableReceiver();
 
   /**
-   * Disable decoding. You can re-enable decoding by calling enableReceiver();
+   * Enable pulse receiver interrupt and logic
    */
   static void disableReceiver();
 
@@ -334,11 +349,12 @@ public:
   /**
    * Functions used during testing
    */
-#if defined(setBitrate) || defined(setFreqDev) || defined(setRxBW)
+#if defined(setBitrate) || defined(setFreqDev) || defined(setRxBW) || defined(setDataShapingOOK)
   int16_t setFrequencyDeviation(float);
   int16_t setBitRate(float);
   int16_t setRxBandwidth(float);
   int16_t receiveDirect();
+  int16_t setDataShapingOOK(int);
 #endif
 
   /**
@@ -364,8 +380,7 @@ public:
  * @brief OOK/FSK Modulation
  * true = OOK
  * false = FSK
- * 
- */
+ * */
   static bool ookModulation;
 
   /**
@@ -399,7 +414,7 @@ private:
 
   /**
    * Quasi-reset. Called when the current edge is too long or short.
-   * reset "promotes" the current edge as being the first edge of a new
+   * reset \"promotes\" the current edge as being the first edge of a new
    * sequence.
    */
   static void resetReceiver();

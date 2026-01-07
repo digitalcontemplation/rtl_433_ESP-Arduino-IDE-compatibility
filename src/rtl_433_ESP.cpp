@@ -40,15 +40,15 @@ SPIClass newSPI(VSPI);
 #endif
 
 #ifdef RF_SX1276
-SX1276 radio = RADIO_LIB_MODULE;
+extern SX1276 radio;
 #endif
 
 #ifdef RF_SX1278
-SX1278 radio = RADIO_LIB_MODULE;
+extern SX1278 radio;
 #endif
 
 #ifdef RF_CC1101
-CC1101 radio = RADIO_LIB_MODULE;
+extern CC1101 radio;
 #endif
 
 #if defined(RF_SX1276) || defined(RF_SX1278)
@@ -136,8 +136,7 @@ rtl_433_ESP::rtl_433_ESP() {
 
 /**
  * @brief Initialize Transceiver and rtl_433 decoders
- * 
- * @param inputPin - GPIO of receiver
+ * * @param inputPin - GPIO of receiver
  * @param receiveFrequency - receive frequency
  */
 void rtl_433_ESP::initReceiver(byte inputPin, float receiveFrequency) {
@@ -334,8 +333,7 @@ void rtl_433_ESP::initReceiver(byte inputPin, float receiveFrequency) {
 
 /**
  * @brief Is a signal available for decoding ?
- * 
- * @return int - which pulse train
+ * * @return int - which pulse train
  */
 int rtl_433_ESP::receivePulseTrain() {
   if (_pulseTrains[_avaiablePulseTrain].num_pulses > 0) {
@@ -348,8 +346,7 @@ int rtl_433_ESP::receivePulseTrain() {
 
 /**
  * @brief Main pulse receiver logic
- * 
- */
+ * */
 void ICACHE_RAM_ATTR rtl_433_ESP::interruptHandler() {
   if (!_enabledReceiver || !receiveMode) {
     _noiseCount++;
@@ -402,8 +399,7 @@ void ICACHE_RAM_ATTR rtl_433_ESP::interruptHandler() {
 
 /**
  * @brief Reset received signal storage
- * 
- */
+ * */
 void rtl_433_ESP::resetReceiver() {
   for (unsigned int i = 0; i < RECEIVER_BUFFER_SIZE; i++) {
     _pulseTrains[i].num_pulses = 0;
@@ -418,8 +414,7 @@ void rtl_433_ESP::resetReceiver() {
 
 /**
  * @brief Enable signal receiver logic
- * 
- * @param inputPin 
+ * * @param inputPin 
  */
 void rtl_433_ESP::enableReceiver() {
   if (receiverGpio >= 0) {
@@ -431,8 +426,7 @@ void rtl_433_ESP::enableReceiver() {
 
 /**
  * @brief Disable receiver logic, and pulse receiver
- * 
- */
+ * */
 void rtl_433_ESP::disableReceiver() {
   _enabledReceiver = false;
   detachInterrupt((uint8_t)receiverGpio);
@@ -440,8 +434,7 @@ void rtl_433_ESP::disableReceiver() {
 
 /**
  * @brief watch for completed signals being received, and pass to decoder logic
- * 
- */
+ * */
 void rtl_433_ESP::loop() {
   if (_enabledReceiver) {
 #if defined(RF_CC1101) && defined(DEAF_WORKAROUND)
@@ -529,8 +522,7 @@ void rtl_433_ESP::loop() {
 
 /**
  * @brief Background task to monitor RSSI signal level and start / end signal receiving
- * 
- * @param pvParameters 
+ * * @param pvParameters 
  */
 void rtl_433_ESP::rtl_433_ReceiverTask(void* pvParameters) {
   for (;;) {
@@ -663,8 +655,7 @@ void rtl_433_ESP::rtl_433_ReceiverTask(void* pvParameters) {
 
 /**
  * @brief Client callback to receive decoded signals
- * 
- * @param callback 
+ * * @param callback 
  * @param messageBuffer 
  * @param bufferSize 
  */
@@ -683,8 +674,7 @@ void rtl_433_ESP::setCallback(rtl_433_ESPCallBack callback, char* messageBuffer,
 
 /**
  * @brief Set delta applied to average RSSI level for determining start and end of signal
- * 
- * @param newRssi 
+ * * @param newRssi 
  */
 void rtl_433_ESP::setRSSIThreshold(int newRssi) {
   rssiThresholdDelta = newRssi;
@@ -698,8 +688,7 @@ void rtl_433_ESP::setRSSIThreshold(int newRssi) {
 
 /**
  * @brief set OOK Threshold
- * 
- */
+ * */
 #if defined(RF_SX1276) || defined(RF_SX1278)
 void rtl_433_ESP::setOOKThreshold(int newOokThreshold) {
   OokFixedThreshold = newOokThreshold;
@@ -715,8 +704,7 @@ void rtl_433_ESP::setOOKThreshold(int newOokThreshold) {
 
 /**
  * @brief This does not work
- * 
- * @param debug 
+ * * @param debug 
  */
 void rtl_433_ESP::setDebug(int debug) {
   rtlVerbose = debug;
@@ -725,8 +713,7 @@ void rtl_433_ESP::setDebug(int debug) {
 
 /**
  * @brief Send RTL_433_ESP status to serial port and client. Also send to serial port transceiver status.
- * 
- * @param status 
+ * * @param status 
  */
 void rtl_433_ESP::getStatus() {
   alogprintfLn(LOG_INFO, " ");
@@ -972,7 +959,7 @@ void rtl_433_ESP::getModuleStatus() {
  * Functions used only during testing
  *
  */
-#if defined(setBitrate) || defined(setFreqDev) || defined(setRxBW)
+#if defined(setBitrate) || defined(setFreqDev) || defined(setRxBW) || defined(setDataShapingOOK)
 int16_t rtl_433_ESP::setFrequencyDeviation(float value) {
   return radio.setFrequencyDeviation(value);
 }
@@ -992,4 +979,11 @@ int16_t rtl_433_ESP::setBitRate(float value) {
 int16_t rtl_433_ESP::setRxBandwidth(float value) {
   return radio.setRxBandwidth(value);
 }
+
+#if defined(RF_SX1276) || defined(RF_SX1278)
+int16_t rtl_433_ESP::setDataShapingOOK(int value) {
+  return radio.setDataShapingOOK(value); // Default 0 ( 0, 1, 2 )
+}
+#endif
+
 #endif

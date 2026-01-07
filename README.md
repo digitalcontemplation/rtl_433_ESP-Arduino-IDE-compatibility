@@ -332,38 +332,18 @@ Wiring for ESP32 DOIT DevKit V1 and AI-Thinker R01 - SX1278
 
 ![image](https://github.com/diepeterpan/rtl_433_ESP/blob/master/docs/Ai-Thinker-Ra-01-Schematic-Diagram.png)
 
-## Frequency Configuration
+## ESP32 Platform Support
 
-The library supports multiple frequency bands including 433 MHz, 868 MHz, and 915 MHz. The receive frequency can be configured using the `RF_MODULE_FREQUENCY` build flag in your `platformio.ini` file.
+### Single-Core ESP32 Variants (ESP32-C3, ESP32-S2)
 
-### Supported Frequencies
+The library automatically detects and supports single-core ESP32 variants such as the ESP32-C3 and ESP32-S2. The decoder task's CPU core assignment and priority are automatically adjusted based on the `CONFIG_FREERTOS_UNICORE` configuration:
 
-The transceiver modules (CC1101, SX1276, SX1278) support multiple frequency bands depending on the hardware variant:
+* **Single-core processors** (ESP32-C3, ESP32-S2): Decoder task runs on core 0 with priority 3
+* **Multi-core processors** (ESP32, ESP32-S3): Decoder task runs on core 1 with priority 2
 
-* **433 MHz** - Default frequency (433.92 MHz), commonly used in Asia and some other regions
-* **868 MHz** - European ISM band (e.g., 868.30 MHz for many European sensors)
-* **915 MHz** - ISM band used in North America, Australia, and some other regions (915.00 MHz)
+This configuration ensures compatibility with single-core ESP32 variants that only have core 0 available, preventing boot crashes that would occur if the task were pinned to the non-existent core 1.
 
-### Configuration
-
-To set a custom frequency, add the `RF_MODULE_FREQUENCY` build flag to your environment in `platformio.ini`:
-
-```ini
-build_flags = 
-  '-DRF_MODULE_FREQUENCY=868.30'  ; Set frequency to 868.30 MHz
-```
-
-**Examples:**
-
-```ini
-'-DRF_MODULE_FREQUENCY=433.92'  ; 433 MHz (default)
-'-DRF_MODULE_FREQUENCY=868.30'  ; 868 MHz (common for EU sensors)
-'-DRF_MODULE_FREQUENCY=915.00'  ; 915 MHz (US ISM band)
-```
-
-**Note:** Make sure your hardware supports the frequency band you want to use. Many LoRa modules are available in different frequency variants (e.g., 433 MHz, 868 MHz, 915 MHz versions). The frequency must match your hardware's capabilities and the sensors you want to receive.
-
-For a complete example, see the `esp32_heltec_915` environment in [example/OOK_Receiver/platformio.ini](example/OOK_Receiver/platformio.ini#L163).
+The `CONFIG_FREERTOS_UNICORE` flag is automatically set by the ESP-IDF/Arduino framework when compiling for single-core ESP32 variants, so no manual configuration is required.
 
 ## Wiring and Building the Example
 
@@ -411,7 +391,6 @@ MY_DEVICES            ; Only include my personal subset of devices
 NO_DEAF_WORKAROUND    ; Workaround for issue #16 ( by default the workaround is enabled )
 PUBLISH_UNPARSED      ; Enable publishing of MQTT messages for unparsed signals, e.g. {model":"unknown","protocol":"signal parsing failed"…
 RAW_SIGNAL_DEBUG      ; display raw received messages
-RF_MODULE_FREQUENCY   ; Set receive frequency in MHz (e.g., 433.92, 868.30, 915.00), defaults to 433.92
 RSSI_SAMPLES          ; Number of rssi samples to collect for average calculation, defaults to 50,000
 RSSI_THRESHOLD        ; Delta applied to average RSSI value to calculate RSSI Signal Threshold, defaults to 9
 RTL_DEBUG             ; Enable RTL_433 device decoder verbose mode for all device decoders ( 0=normal, 1=verbose, 2=verbose decoders, 3=debug decoders, 4=trace decoding. )
